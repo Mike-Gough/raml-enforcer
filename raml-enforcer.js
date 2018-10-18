@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 "use strict";
 
+// NPM package configuration
 const pkg       = require('./package.json');
+
+// RAML parser
 const raml      = require('raml-1-parser');
+
+// Command line argument parser
 const commander = require('commander');
+
+// Colors and styles for console
 const colors    = require('colors');
-const Bluebird  = require('bluebird');
+
+// A javascript promise library
+const bluebird  = require('bluebird');
+
+// node.js library for working with files and directories
 const path      = require('path');
 
 /**
- * Returns a Bluebird promise that resolves with an object
- * (with 'src' and 'message' properties) or rejects with an error.
+ * Returns a promise that is either an object
+ * (with 'src' and 'message' properties) or an error.
  */
 const validate = function (filePath, options) {
 
@@ -22,16 +33,16 @@ const validate = function (filePath, options) {
 
   const mergedOptions = Object.assign({}, defaultOptions, options || {});
 
-  return Bluebird
+  return bluebird
     .resolve()
     .then(() => {
 
       // Parse file
-      return raml.loadRAML(filePath).catch((err) => {
+      return raml.loadRAML(filePath).catch((error) => {
 
         // Generic error
-        err.issues = [{ src: filePath, message: err.message}];
-        throw err;
+        error.issues = [{ src: filePath, message: error.message}];
+        throw error;
       });
     })
     .then((ramlContent) => {
@@ -71,12 +82,13 @@ const validate = function (filePath, options) {
         throw ve;
       }
 
-      // Otherwise the file is valid
+      // Otherwise the RAML file is valid
       return { src: filePath, message:'VALID' };
     });
 };
 
-let issueCount = 0;
+let errorCount = 0;
+let warningCount = 0;
 
 const validationOptions = {};
 
@@ -127,35 +139,35 @@ if (commander.errors) {
 }
 
 // Process each file sequentially
-Bluebird
+bluebird
   .each(commander.args, (file) => {
 
     // Validate the file
     return validate(file, validationOptions)
       .then((result) => {
 
-        // File is valid. Display success message.
+        // Display success message for file
         console.log(`[${result.src}] ${colors.green(result.message)}`);
       })
       .catch((error) => {
 
-        // File is invalid. Display message for each issue.
+        // Display error or warning message for each issue in the file
         error.issues.forEach((issue) => {
 
           if (issue.isWarning) {
             console.log(`[${issue.src}] ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
+            warningCount++;
           } else {
             console.log(`[${issue.src}] ${colors.red('ERROR')} ${colors.red(issue.message)}`);
+            errorCount++;
           }
-
-          issueCount++;
         });
       });
   })
   .finally(() => {
 
     // If any issues occurred, return a proper status code
-    if (issueCount > 0) {
+    if (errorCount > 0) {
       process.exit(1);
     }
   });
