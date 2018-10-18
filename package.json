@@ -1,0 +1,19 @@
+{
+  "name": "raml-enforcer",
+  "version": "1.0.0",
+  "description": "A RAML linter",
+  "main": "raml-enforcer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "RAML",
+    "lint",
+    "enforcer"
+  ],
+  "author": "Mike Gough",
+  "license": "ISC",
+  "dependencies": {
+    "npm": "^6.4.1"
+  }
+}
