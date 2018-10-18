@@ -1,19 +1,35 @@
 {
   "name": "raml-enforcer",
   "version": "1.0.0",
-  "description": "A RAML linter",
+  "description": "A command line RAML linter",
   "main": "raml-enforcer.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "node_modules/eslint/bin/eslint.js src/*.js test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mike-Gough/raml-enforcer"
   },
   "keywords": [
     "RAML",
+    "cli",
     "lint",
-    "enforcer"
+    "enforcer",
+    "validate",
+    "validator"
   ],
   "author": "Mike Gough",
   "license": "ISC",
   "dependencies": {
-    "npm": "^6.4.1"
-  }
+    "npm": "^6.4.1",
+    "bluebird": "^3.4.6",
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "raml-1-parser": "^1.1.15"
+  },
+  "devDependencies": {
+    "eslint": "^3.7.0"
+  },
+  "private": false
 }
