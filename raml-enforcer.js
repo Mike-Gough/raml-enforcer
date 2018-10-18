@@ -29,6 +29,8 @@ const validate = function (filePath, options) {
     reportIncludes: true,
     reportWarnings: true,
     reportErrors: true,
+    throwOnWarnings: true,
+    throwOnErrors: true
   };
 
   const mergedOptions = Object.assign({}, defaultOptions, options || {});
@@ -100,6 +102,8 @@ commander
   .option('  --no-includes', 'do not report issues for include files')
   .option('  --no-warnings', 'do not report warnings')
   .option('  --no-errors', 'do not report errors')
+  .option('  --no-throw-on-warnings', 'do not exit with an exception when warnings occur')
+  .option('  --no-throw-on-errors', 'do not exit with an exception when errors occur')
   .parse(process.argv);
 
 // If there are no files to process, then display the usage message
@@ -138,6 +142,22 @@ if (commander.errors) {
   console.log(`[raml-enforcer] ${colors.white('report errors:')} ${colors.red('false')}`);
 }
 
+// --no-throw-on-warnings option
+if (commander.errors) {
+  console.log(`[raml-enforcer] ${colors.white('throw on warnings:')} ${colors.green('true')}`);
+} else {
+  validationOptions.throwOnWarnings = false;
+  console.log(`[raml-enforcer] ${colors.white('throw on warnings:')} ${colors.red('false')}`);
+}
+
+// --no-throw-on-errors option
+if (commander.errors) {
+  console.log(`[raml-enforcer] ${colors.white('throw on errors:')} ${colors.green('true')}`);
+} else {
+  validationOptions.throwOnErrors = false;
+  console.log(`[raml-enforcer] ${colors.white('throw on errors:')} ${colors.red('false')}`);
+}
+
 // Process each file sequentially
 bluebird
   .each(commander.args, (file) => {
@@ -166,8 +186,13 @@ bluebird
   })
   .finally(() => {
 
-    // If any issues occurred, return a proper status code
-    if (errorCount > 0) {
+    // If warnings ocurred, return s proper status code
+    if (warningCount > 0 & throwOnWarnings) {
+      process.exit(1);
+    }
+
+    // If errors occurred, return a proper status code
+    if (errorCount > 0 & throwOnErrors) {
       process.exit(1);
     }
   });
