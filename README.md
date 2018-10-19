@@ -19,7 +19,7 @@ You will need the following things properly installed on your computer.
 * `npm install`
 
 ## Running
-![Example start command](doco/img/linting-options-example.jpg?raw=true)
+![Example start command](https://github.com/Mike-Gough/raml-enforcer/raw/master/doco/img/linting-options-example.png)
 * `node raml-enforcer.js <main-api-file>`
 
 ### Linting Options
