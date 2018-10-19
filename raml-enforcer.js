@@ -111,52 +111,56 @@ if (commander.args.length === 0) {
   commander.help();
 }
 
+console.log(`raml-enforcer parameters:`.bold);
+
 // --no-colors option (handled by colors module)
 if (!commander.colors) {
-  console.log(`[raml-enforcer] ${colors.white('use colors:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('use colors:')} ${colors.magenta('true')}`);
 } else {
-  console.log(`[raml-enforcer] use colors: false`);
+  console.log(`  use colors: false`);
 }
 
 // --no-includes option
 if (commander.includes) {
-  console.log(`[raml-enforcer] ${colors.white('validate includes:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('validate includes:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportIncludes = false;
-  console.log(`[raml-enforcer] ${colors.white('validate includes:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('validate includes:')} ${colors.red('false')}`);
 }
 
 // --no-warnings option
 if (commander.warnings) {
-  console.log(`[raml-enforcer] ${colors.white('report warnings:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('report warnings:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportWarnings = false;
-  console.log(`[raml-enforcer] ${colors.white('report warnings:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('report warnings:')} ${colors.red('false')}`);
 }
 
 // --no-errors option
 if (commander.errors) {
-  console.log(`[raml-enforcer] ${colors.white('report errors:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('report errors:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportErrors = false;
-  console.log(`[raml-enforcer] ${colors.white('report errors:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('report errors:')} ${colors.red('false')}`);
 }
 
 // --no-throw-on-warnings option
 if (commander.errors) {
-  console.log(`[raml-enforcer] ${colors.white('throw on warnings:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('throw on warnings:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.throwOnWarnings = false;
-  console.log(`[raml-enforcer] ${colors.white('throw on warnings:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('throw on warnings:')} ${colors.red('false')}`);
 }
 
 // --no-throw-on-errors option
 if (commander.errors) {
-  console.log(`[raml-enforcer] ${colors.white('throw on errors:')} ${colors.green('true')}`);
+  console.log(`  ${colors.white('throw on errors:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.throwOnErrors = false;
-  console.log(`[raml-enforcer] ${colors.white('throw on errors:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('throw on errors:')} ${colors.red('false')}`);
 }
+
+console.log(`raml-enforcer report:`.bold);
 
 // Process each file sequentially
 bluebird
@@ -167,7 +171,7 @@ bluebird
       .then((result) => {
 
         // Display success message for file
-        console.log(`[${result.src}] ${colors.green(result.message)}`);
+        console.log(`  ${colors.white('[' + result.src + ']')} ${colors.green(result.message)}`);
       })
       .catch((error) => {
 
@@ -175,10 +179,10 @@ bluebird
         error.issues.forEach((issue) => {
 
           if (issue.isWarning) {
-            console.log(`[${issue.src}] ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
+            console.log(`  ${colors.white('[' + result.src + ']')} ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
             warningCount++;
           } else {
-            console.log(`[${issue.src}] ${colors.red('ERROR')} ${colors.red(issue.message)}`);
+            console.log(`  ${colors.white('[' + result.src + ']')} ${colors.red('ERROR')} ${colors.red(issue.message)}`);
             errorCount++;
           }
         });
