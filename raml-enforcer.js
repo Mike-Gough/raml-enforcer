@@ -187,12 +187,12 @@ bluebird
   .finally(() => {
 
     // If warnings ocurred, return s proper status code
-    if (warningCount > 0 & throwOnWarnings) {
+    if (warningCount > 0 & validationOptions.throwOnWarnings) {
       process.exit(1);
     }
 
     // If errors occurred, return a proper status code
-    if (errorCount > 0 & throwOnErrors) {
+    if (errorCount > 0 & validationOptions.throwOnErrors) {
       process.exit(1);
     }
   });
