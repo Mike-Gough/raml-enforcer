@@ -18,9 +18,9 @@ You will need the following things properly installed on your computer.
 * `cd raml-enforcer`
 * `npm install`
 
-## Running / Development
-
-* `node raml-enforcer.js api.raml`
+## Running
+![Example start command](doco/img/linting-options-example.jpg?raw=true)
+* `node raml-enforcer.js <main-api-file>`
 
 ### Linting Options
 | Argument               | Description                                       |
