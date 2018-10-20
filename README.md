@@ -23,14 +23,15 @@ You will need the following things properly installed on your computer.
 * `node raml-enforcer.js <main-api-file>`
 
 ### Linting Options
-| Argument               | Description                                       |
-|------------------------|---------------------------------------------------|
-| --no-color             | do not use color in output                        |
-| --no-includes          | do not report issues for include files            |
-| --no-warnings          | do not report warnings                            |
-| --no-errors            | do not report errors                              |
-| --no-throw-on-warnings | do not exit with an exception when warnings occur |
-| --no-throw-on-errors   | do not exit with an exception when errors occur   |
+| Argument                                   | Description                                                                          |
+|--------------------------------------------|--------------------------------------------------------------------------------------|
+| --no-color                                 | do not use color in output                                                           |
+| --no-includes                              | do not report issues for include files                                               |
+| --no-warnings                              | do not report warnings                                                               |
+| --no-errors                                | do not report errors                                                                 |
+| --no-throw-on-warnings                     | do not exit with an exception when warnings occur                                    |
+| --no-throw-on-errors                       | do not exit with an exception when errors occur                                      |
+| --no-warn-old-raml-version                 | do not return a warning when an old RAML version is being used                       |
 
 ## Further Reading / Useful Links
 

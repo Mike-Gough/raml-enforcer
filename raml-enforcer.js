@@ -30,7 +30,8 @@ const validate = function (filePath, options) {
     reportWarnings: true,
     reportErrors: true,
     throwOnWarnings: true,
-    throwOnErrors: true
+    throwOnErrors: true,
+    warnOldRamlVersion: true
   };
 
   const mergedOptions = Object.assign({}, defaultOptions, options || {});
@@ -53,7 +54,6 @@ const validate = function (filePath, options) {
 
       // Check ramlContent for issues
       ramlContent.errors().forEach((issue) => {
-
         let name = path.join(path.dirname(filePath), issue.path);
 
         if (!mergedOptions.reportIncludes && name !== filePath) {
@@ -74,6 +74,17 @@ const validate = function (filePath, options) {
           isWarning: issue.isWarning,
         });
       });
+
+      // If issues were not identified, validate RAML quality
+      if (issuesToReport.length == 0) {
+        if (!mergedOptions.warnOldRamlVersion && (ramlContent.RAMLVersion() != "RAML10")) {
+          issuesToReport.push({
+            src: filePath,
+            message: `RAML should be upgraded to version 1.0`,
+            isWarning: true,
+          });
+        }
+      }
 
       // If issues were identified
       if (issuesToReport.length > 0) {
@@ -104,6 +115,7 @@ commander
   .option('  --no-errors', 'do not report errors')
   .option('  --no-throw-on-warnings', 'do not exit with an exception when warnings occur')
   .option('  --no-throw-on-errors', 'do not exit with an exception when errors occur')
+  .option('  --no-warn-old-raml-version', 'do not return a warning when an old RAML version is being used')
   .parse(process.argv);
 
 // If there are no files to process, then display the usage message
@@ -125,7 +137,7 @@ if (commander.includes) {
   console.log(`  ${colors.white('validate includes:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportIncludes = false;
-  console.log(`  ${colors.white('validate includes:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('validate includes:')} ${colors.yellow('false')}`);
 }
 
 // --no-warnings option
@@ -133,7 +145,7 @@ if (commander.warnings) {
   console.log(`  ${colors.white('report warnings:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportWarnings = false;
-  console.log(`  ${colors.white('report warnings:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('report warnings:')} ${colors.yellow('false')}`);
 }
 
 // --no-errors option
@@ -141,23 +153,31 @@ if (commander.errors) {
   console.log(`  ${colors.white('report errors:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.reportErrors = false;
-  console.log(`  ${colors.white('report errors:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('report errors:')} ${colors.yellow('false')}`);
 }
 
 // --no-throw-on-warnings option
-if (commander.errors) {
+if (commander.throwOnWarnings) {
   console.log(`  ${colors.white('throw on warnings:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.throwOnWarnings = false;
-  console.log(`  ${colors.white('throw on warnings:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('throw on warnings:')} ${colors.yellow('false')}`);
 }
 
 // --no-throw-on-errors option
-if (commander.errors) {
+if (commander.throwOnErrors) {
   console.log(`  ${colors.white('throw on errors:')} ${colors.magenta('true')}`);
 } else {
   validationOptions.throwOnErrors = false;
-  console.log(`  ${colors.white('throw on errors:')} ${colors.red('false')}`);
+  console.log(`  ${colors.white('throw on errors:')} ${colors.yellow('false')}`);
+}
+
+// --no-warning-on-old-raml-version
+if (commander.noWarnOldRamlVersion) {
+  console.log(`  ${colors.white('warn of old RAML versions:')} ${colors.magenta('true')}`);
+} else {
+  validationOptions.warnOldRamlVersion = false;
+  console.log(`  ${colors.white('warn of old RAML versions:')} ${colors.yellow('false')}`);
 }
 
 console.log(`raml-enforcer report:`.bold);
@@ -179,10 +199,11 @@ bluebird
         error.issues.forEach((issue) => {
 
           if (issue.isWarning) {
-            console.log(`  ${colors.white('[' + result.src + ']')} ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
+            console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
             warningCount++;
           } else {
-            console.log(`  ${colors.white('[' + result.src + ']')} ${colors.red('ERROR')} ${colors.red(issue.message)}`);
+            console.log(issue);
+            console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.red('ERROR')} ${colors.red(issue.message)}`);
             errorCount++;
           }
         });
