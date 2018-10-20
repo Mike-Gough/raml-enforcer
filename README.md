@@ -36,3 +36,4 @@ You will need the following things properly installed on your computer.
 ## Further Reading / Useful Links
 
 * [raml.org](https://raml.org/)
+* [raml-js-parser-2](https://github.com/raml-org/raml-js-parser-2)
