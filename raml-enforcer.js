@@ -36,6 +36,11 @@ const validate = function (filePath, options) {
 
   const mergedOptions = Object.assign({}, defaultOptions, options || {});
 
+  _.map(optionKeys, function(key) {
+    validationOptions[key] = commander[key];
+    console.log(`  merged ${colors.white(_.startCase(key) + ':')} ${colors.magenta(commander[key])}`);
+  });
+
   return bluebird
     .resolve()
     .then(() => {
@@ -72,6 +77,7 @@ const validate = function (filePath, options) {
           src: `${name}:${issue.range.start.line}:${issue.range.start.column}`,
           message: issue.message,
           isWarning: issue.isWarning,
+          isError: !issue.isWarning,
         });
       });
 
@@ -82,6 +88,7 @@ const validate = function (filePath, options) {
             src: filePath,
             message: `RAML should be upgraded to version 1.0`,
             isWarning: true,
+            isError: false,
           });
         }
       }
@@ -161,8 +168,9 @@ bluebird
           if (issue.isWarning) {
             console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`);
             warningCount++;
-          } else {
-            console.log(issue);
+          }
+
+          if (issue.isError) {
             console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.red('ERROR')} ${colors.red(issue.message)}`);
             errorCount++;
           }
