@@ -25,30 +25,12 @@ const _         = require('lodash');
 // Returns a promise that is either an object or an error
 const validate = function (filePath, options) {
 
-  const defaultOptions = {
-    includes: true,
-    warnings: true,
-    errors: true,
-    throwOnWarnings: true,
-    throwOnErrors: true,
-    warnOldRamlVersion: true
-  };
-
-  const mergedOptions = Object.assign({}, defaultOptions, options || {});
-
-  _.map(optionKeys, function(key) {
-    validationOptions[key] = commander[key];
-    console.log(`  merged ${colors.white(_.startCase(key) + ':')} ${colors.magenta(commander[key])}`);
-  });
-
   return bluebird
     .resolve()
     .then(() => {
 
       // Parse file
       return raml.loadRAML(filePath).catch((error) => {
-
-        // Generic error
         error.issues = [{ src: filePath, message: error.message}];
         throw error;
       });
@@ -57,19 +39,15 @@ const validate = function (filePath, options) {
 
       const issuesToReport = [];
 
-      // Check ramlContent for issues
+      // Check ramlContent for parser issues
       ramlContent.errors().forEach((issue) => {
         let name = path.join(path.dirname(filePath), issue.path);
 
-        if (!mergedOptions.includes && name !== filePath) {
+        if (!options.includes && name !== filePath) {
           return;
-        }
-
-        if (!mergedOptions.warnings && issue.isWarning) {
+        } else if (!options.warnings && issue.isWarning) {
           return;
-        }
-
-        if (!mergedOptions.errors && !issue.isWarning) {
+        } else if (!options.errors && !issue.isWarning) {
           return;
         }
 
@@ -81,9 +59,9 @@ const validate = function (filePath, options) {
         });
       });
 
-      // If issues were not identified, validate RAML quality
+      // Check the ramlContent for style and quality issues
       if (issuesToReport.length == 0) {
-        if (!mergedOptions.warnOldRamlVersion && (ramlContent.RAMLVersion() != "RAML10")) {
+        if (!options.warnOldRamlVersion && (ramlContent.RAMLVersion() != "RAML10")) {
           issuesToReport.push({
             src: filePath,
             message: `RAML should be upgraded to version 1.0`,
@@ -110,6 +88,16 @@ const validate = function (filePath, options) {
 let errorCount = 0;
 let warningCount = 0;
 
+const defaultOptions = {
+  color: true,
+  includes: true,
+  warnings: true,
+  errors: true,
+  throwOnWarnings: true,
+  throwOnErrors: true,
+  warnOldRamlVersion: true
+};
+
 const validationOptions = {};
 
 // Parse command line arguments
@@ -132,19 +120,16 @@ if (commander.args.length === 0) {
 
 console.log(`parameters:`.bold);
 
-let optionKeys = [
-  "color",
-  "includes",
-  "warnings",
-  "errors",
-  "throwOnWarnings",
-  "throwOnErrors",
-  "warnOldRamlVersion"
-]
-
-_.map(optionKeys, function(key) {
+// store the provided args in validationOptions
+_.forOwn(defaultOptions, function(value, key) {
   validationOptions[key] = commander[key];
-  console.log(`  ${colors.white(_.startCase(key) + ':')} ${colors.magenta(commander[key])}`);
+});
+
+// merge the provided args from validationOptions with the default args in defaultOptions
+const mergedOptions = Object.assign({}, defaultOptions, validationOptions || {});
+
+_.forOwn(mergedOptions, function(value, key) {
+  console.log(`  ${colors.white(_.startCase(key) + ':')} ${colors.magenta(value)}`);
 });
 
 console.log(`report:`.bold);
