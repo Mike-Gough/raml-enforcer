@@ -37,3 +37,7 @@ You will need the following things properly installed on your computer.
 
 * [raml.org](https://raml.org/)
 * [raml-js-parser-2](https://github.com/raml-org/raml-js-parser-2)
+* [lodash](https://lodash.com)
+* [commander](https://github.com/tj/commander.js)
+* [color](https://github.com/Qix-/color)
+* [bluebird](http://bluebirdjs.com)

@@ -19,16 +19,16 @@ const bluebird  = require('bluebird');
 // node.js library for working with files and directories
 const path      = require('path');
 
-/**
- * Returns a promise that is either an object
- * (with 'src' and 'message' properties) or an error.
- */
+// lodash library
+const _         = require('lodash');
+
+// Returns a promise that is either an object or an error
 const validate = function (filePath, options) {
 
   const defaultOptions = {
-    reportIncludes: true,
-    reportWarnings: true,
-    reportErrors: true,
+    includes: true,
+    warnings: true,
+    errors: true,
     throwOnWarnings: true,
     throwOnErrors: true,
     warnOldRamlVersion: true
@@ -56,15 +56,15 @@ const validate = function (filePath, options) {
       ramlContent.errors().forEach((issue) => {
         let name = path.join(path.dirname(filePath), issue.path);
 
-        if (!mergedOptions.reportIncludes && name !== filePath) {
+        if (!mergedOptions.includes && name !== filePath) {
           return;
         }
 
-        if (!mergedOptions.reportWarnings && issue.isWarning) {
+        if (!mergedOptions.warnings && issue.isWarning) {
           return;
         }
 
-        if (!mergedOptions.reportErrors && !issue.isWarning) {
+        if (!mergedOptions.errors && !issue.isWarning) {
           return;
         }
 
@@ -96,7 +96,7 @@ const validate = function (filePath, options) {
       }
 
       // Otherwise the RAML file is valid
-      return { src: filePath, message:'VALID' };
+      return { src: filePath, message:'Valid' };
     });
 };
 
@@ -123,64 +123,24 @@ if (commander.args.length === 0) {
   commander.help();
 }
 
-console.log(`raml-enforcer parameters:`.bold);
+console.log(`parameters:`.bold);
 
-// --no-colors option (handled by colors module)
-if (!commander.colors) {
-  console.log(`  ${colors.white('use colors:')} ${colors.magenta('true')}`);
-} else {
-  console.log(`  use colors: false`);
-}
+let optionKeys = [
+  "color",
+  "includes",
+  "warnings",
+  "errors",
+  "throwOnWarnings",
+  "throwOnErrors",
+  "warnOldRamlVersion"
+]
 
-// --no-includes option
-if (commander.includes) {
-  console.log(`  ${colors.white('validate includes:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.reportIncludes = false;
-  console.log(`  ${colors.white('validate includes:')} ${colors.yellow('false')}`);
-}
+_.map(optionKeys, function(key) {
+  validationOptions[key] = commander[key];
+  console.log(`  ${colors.white(_.startCase(key) + ':')} ${colors.magenta(commander[key])}`);
+});
 
-// --no-warnings option
-if (commander.warnings) {
-  console.log(`  ${colors.white('report warnings:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.reportWarnings = false;
-  console.log(`  ${colors.white('report warnings:')} ${colors.yellow('false')}`);
-}
-
-// --no-errors option
-if (commander.errors) {
-  console.log(`  ${colors.white('report errors:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.reportErrors = false;
-  console.log(`  ${colors.white('report errors:')} ${colors.yellow('false')}`);
-}
-
-// --no-throw-on-warnings option
-if (commander.throwOnWarnings) {
-  console.log(`  ${colors.white('throw on warnings:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.throwOnWarnings = false;
-  console.log(`  ${colors.white('throw on warnings:')} ${colors.yellow('false')}`);
-}
-
-// --no-throw-on-errors option
-if (commander.throwOnErrors) {
-  console.log(`  ${colors.white('throw on errors:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.throwOnErrors = false;
-  console.log(`  ${colors.white('throw on errors:')} ${colors.yellow('false')}`);
-}
-
-// --no-warning-on-old-raml-version
-if (commander.noWarnOldRamlVersion) {
-  console.log(`  ${colors.white('warn of old RAML versions:')} ${colors.magenta('true')}`);
-} else {
-  validationOptions.warnOldRamlVersion = false;
-  console.log(`  ${colors.white('warn of old RAML versions:')} ${colors.yellow('false')}`);
-}
-
-console.log(`raml-enforcer report:`.bold);
+console.log(`report:`.bold);
 
 // Process each file sequentially
 bluebird
