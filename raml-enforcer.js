@@ -61,14 +61,45 @@ const validate = function (filePath, options) {
 
       // Check the ramlContent for style and quality issues
       if (issuesToReport.length == 0) {
+
+        // Validate that the latest version of RAML is used
         if (!options.warnOldRamlVersion && (ramlContent.RAMLVersion() != "RAML10")) {
           issuesToReport.push({
             src: filePath,
             message: `RAML should be upgraded to version 1.0`,
             isWarning: true,
             isError: false,
-          });
+          })
         }
+
+        // Validate that the API has a title
+        if ((_.isEmpty(ramlContent.title()))) {
+          issuesToReport.push({
+            src: filePath,
+            message: `API should spesify a title property`,
+            isWarning: true,
+            isError: false,
+          })
+        }
+
+        function validateResourceDescription(resource, location) {
+          if (_.isEmpty(resource.description())) {
+            issuesToReport.push({
+              src: filePath,
+              message: `Resource should have a description ${location}`,
+              isWarning: true,
+              isError: false,
+            })
+          }
+          _.each(resource.resources(), function(childResource) {
+            validateResourceDescription(childResource, location + childResource.relativeUri().value())
+          })
+        }
+
+        // Validate that all resources have a description
+        _.each(ramlContent.resources(), function(resource) {
+          validateResourceDescription(resource, resource.relativeUri().value())
+        })
       }
 
       // If issues were identified
