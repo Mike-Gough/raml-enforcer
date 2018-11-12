@@ -1,131 +1,17 @@
 #!/usr/bin/env node
 "use strict"
 
-// NPM package configuration
-const pkg       = require('./package.json')
-
-// RAML parser
-const raml      = require('raml-1-parser')
-
-// Command line argument parser
-const commander = require('commander')
-
-// Colors and styles for console
-const colors    = require('colors')
-
-// node.js library for working with files and directories
-const path      = require('path')
-
-// lodash library
-const _         = require('lodash')
-
-// Returns a promise that is either an object or an error
-const validate = function (filePath, options) {
-  return new Promise(
-    function (resolve, reject) {
-      resolve(
-        raml.loadRAML(filePath).catch((error) => {
-          error.issues = [{ src: filePath, message: error.message}]
-          throw error
-        })
-      )
-    }
-  )
-  .then((ramlContent) => {
-
-    const issuesToReport = []
-
-    // Check ramlContent for parser issues
-    ramlContent.errors().forEach((issue) => {
-      let name = path.join(path.dirname(filePath), issue.path)
-
-      if (!options.includes && name !== filePath) {
-        return
-      } else if (!options.warnings && issue.isWarning) {
-        return
-      } else if (!options.errors && !issue.isWarning) {
-        return
-      }
-
-      issuesToReport.push({
-        src: `${name}:${issue.range.start.line}:${issue.range.start.column}`,
-        message: issue.message,
-        isWarning: issue.isWarning,
-        isError: !issue.isWarning,
-      })
-    })
-
-    // Check the ramlContent for style and quality issues
-    if (issuesToReport.length == 0) {
-
-      // Validate that the latest version of RAML is used
-      if (!options.warnOldRamlVersion && (ramlContent.RAMLVersion() != "RAML10")) {
-        issuesToReport.push({
-          src: filePath,
-          message: `RAML should be upgraded to version 1.0`,
-          isWarning: true,
-          isError: false,
-        })
-      }
-
-      // Validate that the API has a title
-      if ((_.isEmpty(ramlContent.title()))) {
-        issuesToReport.push({
-          src: filePath,
-          message: `API should spesify a title property`,
-          isWarning: true,
-          isError: false,
-        })
-      }
-
-      function validateResourceDescription(resource, location) {
-        if (_.isEmpty(resource.description())) {
-          issuesToReport.push({
-            src: filePath,
-            message: `Resource should have a description ${location}`,
-            isWarning: true,
-            isError: false,
-          })
-        }
-        _.each(resource.resources(), function(childResource) {
-          validateResourceDescription(childResource, location + childResource.relativeUri().value())
-        })
-      }
-
-      // Validate that all resources have a description
-      _.each(ramlContent.resources(), function(resource) {
-        validateResourceDescription(resource, resource.relativeUri().value())
-      })
-    }
-
-    // If issues were identified
-    if (issuesToReport.length > 0) {
-
-      // Throw an error containing the issues
-      let ve = new Error('Validation Error')
-      ve.issues = issuesToReport
-      throw ve
-    }
-
-    // Otherwise the RAML file is valid
-    return { src: filePath, message:'Valid' }
+var validationOptions = require('./validation-options.json') // linter configuration
+var pkg = require('./package.json') // NPM package configuration
+var raml = require('raml-1-parser') // RAML parser
+var commander = require('commander') // Command line argument parser
+var colors = require('colors') // Colors and styles for console
+var path = require('path') // node.js library for working with files and directories
+var _ = require('lodash') // lodash library
+var kindEnum = Object.freeze({
+    "error": 0,
+    "warning": 1
   })
-}
-
-let errorCount = 0
-let warningCount = 0
-
-const defaultOptions = {
-  color: true,
-  includes: true,
-  warnings: true,
-  errors: true,
-  throwOnWarnings: true,
-  throwOnErrors: true,
-  warnOldRamlVersion: true
-}
-
-const validationOptions = {}
 
 // Parse command line arguments
 commander
@@ -140,62 +26,124 @@ commander
   .option('  --no-warn-old-raml-version', 'do not return a warning when an old RAML version is being used')
   .parse(process.argv)
 
-// If there are no files to process, then display the usage message
+// check if command line args have been provided
 if (commander.args.length === 0) {
   commander.help()
+  process.exit(1)
 }
 
-console.log(`parameters:`.bold)
+console.log('parameters:'.bold)
 
-// store the provided args in validationOptions
-_.forOwn(defaultOptions, function(value, key) {
+// override validation options with command line args
+_.forEach(validationOptions, function(value, key) {
   validationOptions[key] = commander[key]
+  console.log('  ' + colors.white(_.startCase(key) + ':') + colors.magenta(value))
 })
 
-// merge the provided args from validationOptions with the default args in defaultOptions
-const mergedOptions = Object.assign({}, defaultOptions, validationOptions || {})
-
-_.forOwn(mergedOptions, function(value, key) {
-  console.log(`  ${colors.white(_.startCase(key) + ':')} ${colors.magenta(value)}`)
-})
-
-console.log(`report:`.bold)
+console.log('report:'.bold)
 
 // Process each file sequentially
-new Promise(
-  function (resolve, reject) {
-    _.each(commander.args, (file) => {
-
-      // Validate the file
-      return validate(file, validationOptions)
-        .then((result) => {
-
-          // Display success message for file
-          console.log(`  ${colors.white('[' + result.src + ']')} ${colors.green(result.message)}`)
-        })
-        .catch((error) => {
-
-          // Display error or warning message for each issue in the file
-          error.issues.forEach((issue) => {
-
-            if (issue.isWarning) {
-              console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.yellow('WARN')} ${colors.yellow(issue.message)}`)
-              warningCount++
-            }
-
-            if (issue.isError) {
-              console.log(`  ${colors.white('[' + issue.src + ']')} ${colors.red('ERROR')} ${colors.red(issue.message)}`)
-              errorCount++
-            }
-          })
-        })
+_.forEach(commander.args, (filePath) => {
+  raml.loadRAML(filePath)
+    .catch((error) => {
+      error = [{
+        src: filePath,
+        message: error.message
+      }]
+      throw error
     })
-  })
-  .finally(() => {
+    .then((ramlContent) => {
 
-    // return a proper status code
-    if (warningCount > 0 & validationOptions.throwOnWarnings ||
-        errorCount > 0 & validationOptions.throwOnErrors) {
-      process.exit(1)
-    }
+      // Check ramlContent for parser issues
+      var issues = _.flatten(
+        ramlContent.errors().map((issue) => {
+          var name = path.join(path.dirname(filePath), issue.path)
+
+          if ((validationOptions.includes && name == filePath) || (issue.isWarning && validationOptions.warnings) || (!issue.isWarning && validationOptions.errors)) {
+            return {
+              src: name + ':' + issue.range.start.line + ':' + issue.range.start.column,
+              message: issue.message,
+              kind: issue.isWarning ? kindEnum.warning : kindEnum.error
+            }
+          }
+        })
+      )
+
+      var issueCountByKind = _.countBy(error.issues, function(issue) {
+        return issue.kind;
+      })
+
+      // If the RAML file is valid, check for style and quality issues
+      if (_.isEmpty(issues) && [kindEnum.error] == 0) {
+
+        // Validate that the latest version of RAML is used
+        if (!validationOptions.warnOldRamlVersion && (ramlContent.RAMLVersion() != 'RAML10')) {
+          issues.push({
+            src: filePath,
+            message: 'RAML should be upgraded to version 1.0',
+            kind: kindEnum.warning
+          })
+        }
+
+        // Validate that the API has a title
+        if ((_.isEmpty(ramlContent.title()))) {
+          issues.push({
+            src: filePath,
+            message: 'API should spesify a title property',
+            kind: kindEnum.warning
+          })
+        }
+
+        // Validate that all resources have a description
+        function validateResourceDescription(resource, location) {
+          if (_.isEmpty(resource.description())) {
+            issues.push({
+              src: filePath,
+              message: 'Resource should have a description ' + location,
+              kind: kindEnum.warning
+            })
+          }
+          _.each(resource.resources(), function(childResource) {
+            validateResourceDescription(childResource, location + childResource.relativeUri().value())
+          })
+        }
+
+        _.each(ramlContent.resources(), function(resource) {
+          validateResourceDescription(resource, resource.relativeUri().value())
+        })
+      }
+
+      if (!_.isEmpty(issues)) {
+        throw issues
+      }
+
+      return {
+        src: filePath,
+        message: 'Valid'
+      }
+    })
+    .then((result) => {
+      console.log('  ' + colors.white('[' + result.src + ']') + ' ' + colors.green(result.message))
+    })
+    .catch((error) => {
+      error.forEach((issue) => {
+        switch (issue.kind) {
+          case kindEnum.warning:
+            console.log('  ' + colors.white('[' + issue.src + ']') + ' ' + colors.yellow('WARN') + ' ' + colors.yellow(issue.message))
+            break;
+          case kindEnum.error:
+            console.log('  ' + colors.white('[' + issue.src + ']') + ' ' + colors.red('ERROR') + ' ' + colors.red(issue.message))
+            break;
+        }
+      })
+
+      var issueCountByKind = _.countBy(error.issues, function(issue) {
+        return issue.kind;
+      })
+
+      if ((issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
+         (issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
+        process.exit(1)
+      }
+    })
   })

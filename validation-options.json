@@ -1,0 +1,9 @@
+{
+  "color": true,
+  "includes": true,
+  "warnings": true,
+  "errors": true,
+  "throwOnWarnings": true,
+  "throwOnErrors": true,
+  "warnOldRamlVersion": true
+}
