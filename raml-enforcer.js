@@ -69,7 +69,7 @@ _.forEach(commander.args, (filePath) => {
         })
       )
 
-      var issueCountByKind = _.countBy(error.issues, function(issue) {
+      var issueCountByKind = _.countBy(issues, function(issue) {
         return issue.kind;
       })
 
@@ -77,7 +77,7 @@ _.forEach(commander.args, (filePath) => {
       if (_.isEmpty(issues) && [kindEnum.error] == 0) {
 
         // Validate that the latest version of RAML is used
-        if (!validationOptions.warnOldRamlVersion && (ramlContent.RAMLVersion() != 'RAML10')) {
+        if (validationOptions.warnOldRamlVersion && (ramlContent.RAMLVersion() != 'RAML10')) {
           issues.push({
             src: filePath,
             message: 'RAML should be upgraded to version 1.0',
