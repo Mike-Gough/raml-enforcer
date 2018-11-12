@@ -40,4 +40,3 @@ You will need the following things properly installed on your computer.
 * [lodash](https://lodash.com)
 * [commander](https://github.com/tj/commander.js)
 * [color](https://github.com/Qix-/color)
-* [bluebird](http://bluebirdjs.com)
