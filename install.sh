@@ -22,8 +22,6 @@ unset http_proxy
 unset https_proxy
 export GIT_CURL_VERBOSE=1
 export GIT_TRACE=1
-unset HTTP_PROXY
-unset HTTPS_PROXY
 
 export http_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
 export https_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
@@ -40,15 +38,17 @@ EOF
 openssl version
 curl --version
 git --version
+
+echo "setting up git"
 git config --global http.proxyAuthMethod 'basic'
-git config --global http.proxy "http://$USERNAME:$PASSWORD@cswebproxy.comsuper.int:80"
-git config --global https.proxy "http://$USERNAME:$PASSWORD@cswebproxy.comsuper.int:80"
+git config --global http.proxy "http://$USERNAME:$PASSWORD@lct-web-01:80"
+git config --global https.proxy "http://$USERNAME:$PASSWORD@lct-web-01:80"
 git config --global http.sslVerify "false"
 git config --global url."https://github.com/".insteadOf git@github.com:
 git config --global url."https://".insteadOf git://
 git config --global url."https://github.com".insteadOf ssh://git@github.com
 git config --global http.sslBackend "openssl"
-git config --global http.sslCAInfo $(pwd)/tate-ca.pem
+git config --global color.ui true
 
 npm config set cache $HERE/npm-cache
 npm cache clean -f
