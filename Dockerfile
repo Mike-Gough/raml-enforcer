@@ -16,4 +16,4 @@ RUN bash install.sh
 
 COPY . .
 
-ENTRYPOINT ["node", "build.js"]
+ENTRYPOINT ["node", "raml-enforcer.js"]
