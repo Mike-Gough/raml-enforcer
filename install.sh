@@ -22,9 +22,20 @@ unset http_proxy
 unset https_proxy
 export GIT_CURL_VERBOSE=1
 export GIT_TRACE=1
+unset HTTP_PROXY
+unset HTTPS_PROXY
 
-export http_proxy=http://$USERNAME:$PASSWORD@cswebproxy.comsuper.int:80
-export https_proxy=http://$USERNAME:$PASSWORD@cswebproxy.comsuper.int:80
+export http_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
+export https_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
+
+echo "setting up npm"
+npmAuth=$(curl -s -k -u $USERNAME:$PASSWORD https://cdc-aphmv-dev.comsuper.int/artifactory/api/npm/auth)
+
+cat <<EOF > ~/.npmrc
+$npmAuth
+registry=https://cdc-aphmv-dev.comsuper.int/artifactory/api/npm/virtual-npm/
+strict-ssl=false
+EOF
 
 openssl version
 curl --version
@@ -41,12 +52,6 @@ git config --global http.sslCAInfo $(pwd)/tate-ca.pem
 
 npm config set cache $HERE/npm-cache
 npm cache clean -f
-npm config rm proxy
-npm config rm https-proxy
-npm config --global rm proxy
-npm config --global rm https-proxy
-npm config set strict-ssl false
-npm config set registry https://cdc-aphmv-dev.comsuper.int/artifactory/api/npm/virtual-npm/
 
 echo "installing npm dependancies"
 npm install -ddddd
