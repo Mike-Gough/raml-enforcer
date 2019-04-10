@@ -23,8 +23,8 @@ unset https_proxy
 export GIT_CURL_VERBOSE=1
 export GIT_TRACE=1
 
-export http_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
-export https_proxy=http://$USERNAME:$PASSWORD@lct-web-01:80
+export http_proxy=http://$USERNAME:$PASSWORD@lct-web-01.internal.local:80
+export https_proxy=http://$USERNAME:$PASSWORD@lct-web-01.internal.local:80
 
 echo "setting up npm"
 npmAuth=$(curl -s -k -u $USERNAME:$PASSWORD https://cdc-aphmv-dev.comsuper.int/artifactory/api/npm/auth)
@@ -41,8 +41,8 @@ git --version
 
 echo "setting up git"
 git config --global http.proxyAuthMethod 'basic'
-git config --global http.proxy "http://$USERNAME:$PASSWORD@lct-web-01:80"
-git config --global https.proxy "http://$USERNAME:$PASSWORD@lct-web-01:80"
+git config --global http.proxy "http://$USERNAME:$PASSWORD@lct-web-01.internal.local:80"
+git config --global https.proxy "http://$USERNAME:$PASSWORD@lct-web-01.internal.local:80"
 git config --global http.sslVerify "false"
 git config --global url."https://github.com/".insteadOf git@github.com:
 git config --global url."https://".insteadOf git://
