@@ -143,7 +143,11 @@ _.forEach(commander.args, (filePath) => {
 
       if ((issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
          (issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
+        console.log('exiting with code: 1'.bold)
         process.exit(1)
+      } else {
+        console.log('exiting with code: 0'.bold)
+        process.exit(0)
       }
     })
   })
