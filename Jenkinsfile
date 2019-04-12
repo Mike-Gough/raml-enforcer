@@ -23,6 +23,8 @@ pipeline {
 						script {
 							sh 'sudo /usr/bin/docker rmi -f raml-enforcer | true'
 							sh 'sudo /usr/bin/docker build --no-cache --build-arg HTTP_PROXY_USERNAME=$HTTP_PROXY_USERNAME --build-arg HTTP_PROXY_PASSWORD=$HTTP_PROXY_PASSWORD --tag "raml-enforcer" .'
+							sh 'sudo /usr/bin/docker tag "raml-enforcer" "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:$BUILD_NUMBER"'
+							sh 'sudo /usr/bin/docker tag "raml-enforcer" "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:latest"'
 						}
 					}
 				}
@@ -30,13 +32,14 @@ pipeline {
 		}
 
 		stage('Publish Image') {
+			when {
+				branch 'develop'
+			}
 			steps {
 				timeout(time: 5, unit: 'MINUTES') {
 					script {
 					  sh 'unset HTTP_PROXY'
 						sh 'unset HTTPS_PROXY'
-					  sh 'sudo /usr/bin/docker tag "raml-enforcer" "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:$BUILD_NUMBER"'
-					  sh 'sudo /usr/bin/docker tag "raml-enforcer" "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:latest"'
 					  sh 'sudo /usr/bin/docker push "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:$BUILD_NUMBER"'
 					  sh 'sudo /usr/bin/docker push "cdc-aphmv-dev.comsuper.int/docker-customer-platforms/raml-enforcer:latest"'
 					}
