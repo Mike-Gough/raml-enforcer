@@ -140,11 +140,7 @@ _.forEach(commander.args, (filePath) => {
       var issueCountByKind = _.countBy(error, function(issue) {
         return issue.kind;
       })
-
-      console.log(issueCountByKind[kindEnum.warning])
-      console.log(issueCountByKind[kindEnum.warning] > 0)
-      console.log(validationOptions.throwOnWarnings)
-
+      
       if ((issueCountByKind[kindEnum.warning] != undefined & issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
          (issueCountByKind[kindEnum.error] != undefined & issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
         console.log('exiting with code: 1'.bold)
