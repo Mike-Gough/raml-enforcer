@@ -21,7 +21,7 @@ commander
   .option('  --no-includes', 'do not report issues for include files')
   .option('  --no-warnings', 'do not report warnings')
   .option('  --no-errors', 'do not report errors')
-  .option('  --no-throw-on-warnings', 'do not exit with an exception when warnings occur')
+  .option('  --throw-on-warnings', 'exit with an exception when warnings occur')
   .option('  --no-throw-on-errors', 'do not exit with an exception when errors occur')
   .option('  --no-warn-old-raml-version', 'do not return a warning when an old RAML version is being used')
   .parse(process.argv)
@@ -141,8 +141,12 @@ _.forEach(commander.args, (filePath) => {
         return issue.kind;
       })
 
-      if ((issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
-         (issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
+      console.log(issueCountByKind[kindEnum.warning])
+      console.log(issueCountByKind[kindEnum.warning] > 0)
+      console.log(validationOptions.throwOnWarnings)
+
+      if ((issueCountByKind[kindEnum.warning] != undefined & issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
+         (issueCountByKind[kindEnum.error] != undefined & issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
         console.log('exiting with code: 1'.bold)
         process.exit(1)
       } else {
