@@ -3,7 +3,7 @@
   "includes": true,
   "warnings": true,
   "errors": true,
-  "throwOnWarnings": true,
+  "throwOnWarnings": false,
   "throwOnErrors": true,
   "warnOldRamlVersion": true
 }

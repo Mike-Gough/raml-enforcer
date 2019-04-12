@@ -137,7 +137,7 @@ _.forEach(commander.args, (filePath) => {
         }
       })
 
-      var issueCountByKind = _.countBy(error.issues, function(issue) {
+      var issueCountByKind = _.countBy(error, function(issue) {
         return issue.kind;
       })
 
