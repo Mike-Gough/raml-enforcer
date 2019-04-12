@@ -137,13 +137,17 @@ _.forEach(commander.args, (filePath) => {
         }
       })
 
-      var issueCountByKind = _.countBy(error.issues, function(issue) {
+      var issueCountByKind = _.countBy(error, function(issue) {
         return issue.kind;
       })
 
-      if ((issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
-         (issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
-        process.exit(1)
+      if ((issueCountByKind[kindEnum.warning] != undefined & issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
+         (issueCountByKind[kindEnum.error] != undefined & issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
+          console.log('Exiting with code 1')
+          process.exit(1)
+      } else {
+        console.log('Exiting with code 0')
+        process.exit(0)
       }
     })
   })
