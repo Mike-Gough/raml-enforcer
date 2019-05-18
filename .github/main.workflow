@@ -2,17 +2,12 @@ workflow "Build on push" {
   on = "push"
   resolves = [
     "Push Docker image with build number",
+    "Push Docker image with latest",
+    "Archive release"
   ]
 }
 
-# Filter for master branch
-action "Filter for master" {
-  uses = "actions/bin/filter@master"
-  args = "branch master"
-}
-
 action "Authenticate with Docker Registry" {
-  needs = ["Filter for master"]
   uses = "actions/docker/login@master"
   secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD"]
 }
@@ -23,9 +18,16 @@ action "Build Docker Image" {
   args = "build -f Dockerfile --tag raml-enforcer ."
 }
 
+# Filter for master branch
+action "Filter for master" {
+  uses = "actions/bin/filter@master"
+  needs = ["Build Docker Image"]
+  args = "branch master"
+}
+
 action "Tag Docker Image with build number" {
   uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
-  needs = ["Build Docker Image"]
+  needs = ["Filter for master", "Filter for tag"]
   args = "tag raml-enforcer mikeyryan/raml-enforcer:$GITHUB_SHA"
 }
 
@@ -35,35 +37,16 @@ action "Push Docker image with build number" {
   args = "push mikeyryan/raml-enforcer:$GITHUB_SHA"
 }
 
-workflow "Build on release" {
-  on = "release"
-  resolves = [
-    "Push Docker image with latest",
-    "Archive release"
-  ]
-}
-
 # Filter for master branch
 action "Filter for tag" {
   uses = "actions/bin/filter@master"
+  needs = ["Build Docker Image"]
   args = "tag v*"
-}
-
-action "Authenticate with Docker Registry with tag" {
-  needs = ["Filter for tag"]
-  uses = "actions/docker/login@master"
-  secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD"]
-}
-
-action "Build Docker Image with tag" {
-  uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
-  needs = ["Authenticate with Docker Registry with tag"]
-  args = "build -f Dockerfile --tag raml-enforcer ."
 }
 
 action "Tag Docker Image with latest" {
   uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
-  needs = ["Build Docker Image with tag"]
+  needs = ["Filter for tag"]
   args = "tag raml-enforcer mikeyryan/raml-enforcer:latest"
 }
 
@@ -76,7 +59,7 @@ action "Push Docker image with latest" {
 # Install Dependencies
 action "NPM install" {
   uses = "actions/npm@e7aaefe"
-  needs = "Build Docker Image with tag"
+  needs = "Filter for tag"
   args = "install"
 }
 
