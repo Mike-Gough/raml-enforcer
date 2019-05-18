@@ -1,19 +1,14 @@
 # RAML Enforcer
+The Linting utility for RESTful API Modelling Language (RAML).
+
+## Welcome
 RAML Enforcer is a command line tool for identifying and reporting on patterns found within RAML code. It supports:
 * RAML 0.8
 * RAML 1.0
-* Includes
-* Fragments
 
 ## Running RAML Enforcer
 ### Prerequisites
-Depending on your development environment, you will need either of the following things properly installed on your computer before RAML Enforcer can be run:
-* [Docker](https://www.docker.com)
-
-or
-
-* [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/) (with npm)
+Depending on your development environment, you will need either [Docker](https://www.docker.com) or [Git](https://git-scm.com/) and [Node.js](https://nodejs.org/) ```(^8.10.0)``` to be properly installed on your computer before RAML Enforcer can be run.
 
 ### Running using Docker
 1. Navigate to the directory containing your RAML Service Contract.
@@ -34,8 +29,8 @@ sudo docker run --init --rm --volume $(pwd):/tmp "mikeyryan/raml-enforcer:latest
   node raml-enforcer.js <main-raml-file-path>
   ```
 
-## Linting Options
-RAML Enforcer allows you to pass arguments to the command line to change the rules it will apply when *Linting* your RAML. Below is a brief description of the arguments and their purpose:
+## Configuration
+RAML Enforcer allows you to pass *Linting options* as arguments to the command line to change the rules it will apply. Below is a brief description of the available arguments and their purpose:
 
 | Argument                                   | Description                                                                          |
 |--------------------------------------------|--------------------------------------------------------------------------------------|
@@ -47,11 +42,13 @@ RAML Enforcer allows you to pass arguments to the command line to change the rul
 | --no-throw-on-errors                       | do not exit with an exception when errors occur                                      |
 | --no-warn-old-raml-version                 | do not return a warning when an old RAML version is being used                       |
 
-## Further Reading / Useful Links
+## Further reading
 * [RAML Enforcer - Official Docker Image](https://cloud.docker.com/u/mikeyryan/repository/docker/mikeyryan/raml-enforcer)
 * [Linting RESTful API Modelling Language (RAML)](https://mike.gough.me/posts/linting/raml-enforcer/)
 * [Creating a docker image to run a Node.js script](https://mike.gough.me/posts/docker/npm/create-image/)
 * [Git pre-commit hook for Linting RESTful API Modelling Language (RAML)](https://mike.gough.me/posts/linting/raml-enforcer/git/hooks/)
+
+## Useful links
 * [raml.org](https://raml.org/)
 * [raml-js-parser-2](https://github.com/raml-org/raml-js-parser-2)
 * [lodash](https://lodash.com)
