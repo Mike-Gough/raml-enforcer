@@ -1,7 +1,9 @@
-workflow "Build on push to master" {
+workflow "Build on push" {
   on = "push"
   resolves = [
     "Push Docker image with build number",
+    "Push Docker image with latest",
+    "Archive release"
   ]
 }
 
@@ -12,8 +14,8 @@ action "Filter for master" {
 }
 
 action "Authenticate with Docker Registry" {
-  needs = ["Filter for master"]
   uses = "actions/docker/login@master"
+  needs = ["Filter for master"]
   secrets = ["DOCKER_USERNAME", "DOCKER_PASSWORD"]
 }
 
@@ -35,17 +37,16 @@ action "Push Docker image with build number" {
   args = "push mikeyryan/raml-enforcer:$GITHUB_SHA"
 }
 
-workflow "Build on release to master" {
-  on = "release"
-  resolves = [
-    "Push Docker image with latest",
-    "Archive release"
-  ]
+# Filter for master branch
+action "Filter for tag" {
+  uses = "actions/bin/filter@master"
+  needs = ["Push Docker image with build number"]
+  args = "tag v*"
 }
 
 action "Tag Docker Image with latest" {
   uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
-  needs = ["Build Docker Image"]
+  needs = ["Filter for tag"]
   args = "tag raml-enforcer mikeyryan/raml-enforcer:latest"
 }
 
@@ -58,7 +59,7 @@ action "Push Docker image with latest" {
 # Install Dependencies
 action "NPM install" {
   uses = "actions/npm@e7aaefe"
-  needs = "Build Docker Image"
+  needs = "Filter for tag"
   args = "install"
 }
 
