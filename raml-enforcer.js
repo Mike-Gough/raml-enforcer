@@ -48,7 +48,8 @@ _.forEach(commander.args, (filePath) => {
     .catch((error) => {
       error = [{
         src: filePath,
-        message: error.message
+        message: error.message,
+        kind: kindEnum.error
       }]
       throw error
     })
