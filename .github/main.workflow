@@ -2,6 +2,7 @@ workflow "Build on push" {
   on = "push"
   resolves = [
     "Push Docker image with build number",
+    "Push Docker image with build number 1",
     "Push Docker image with latest",
     "Archive release"
   ]
@@ -27,7 +28,7 @@ action "Filter for master" {
 
 action "Tag Docker Image with build number" {
   uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
-  needs = ["Filter for master", "Filter for tag"]
+  needs = ["Filter for master"]
   args = "tag raml-enforcer mikeyryan/raml-enforcer:$GITHUB_SHA"
 }
 
@@ -42,6 +43,18 @@ action "Filter for tag" {
   uses = "actions/bin/filter@master"
   needs = ["Build Docker Image"]
   args = "tag v*"
+}
+
+action "Tag Docker Image with build number 1" {
+  uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
+  needs = ["Filter for tag"]
+  args = "tag raml-enforcer mikeyryan/raml-enforcer:$GITHUB_SHA"
+}
+
+action "Push Docker image with build number 1" {
+  uses = "actions/docker/cli@8cdf801b322af5f369e00d85e9cf3a7122f49108"
+  needs = ["Tag Docker Image with build number 1"]
+  args = "push mikeyryan/raml-enforcer:$GITHUB_SHA"
 }
 
 action "Tag Docker Image with latest" {
