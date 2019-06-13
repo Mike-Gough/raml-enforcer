@@ -50,8 +50,5 @@ git config --global url."https://github.com".insteadOf ssh://git@github.com
 git config --global http.sslBackend "openssl"
 git config --global color.ui true
 
-npm config set cache $HERE/npm-cache
-npm cache clean -f
-
 echo "installing npm dependancies"
 npm install -ddddd
