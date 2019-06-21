@@ -29,7 +29,7 @@
     "raml-1-parser": "^1.1.52"
   },
   "devDependencies": {
-    "eslint": "^3.7.0"
+    "eslint": "^4.18.2"
   },
   "private": false
 }
