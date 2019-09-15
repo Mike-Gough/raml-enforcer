@@ -38,54 +38,59 @@ _.forEach(validationOptions, function(value, key) {
 
 console.log('report:'.bold)
 
+var createIssue = function(_source, _message, _kind) {
+  return {
+    src: _source,
+    message: _message,
+    kind: _kind
+  }
+}
+
 _.forEach(commander.args, (filePath) => {
   raml.raml10.parse(`file://${filePath}`)
-    .then((webApiBaseUnit) => {
-      return raml.raml10.validate(webApiBaseUnit)
+    .catch((error) => {
+      throw [createIssue(error.Pp,error.mz,'Violation')]
     })
-    .then((resultPromise) => {
+    .then((webApiBaseUnit) => {
+      async function validate(api) {
+        let response = await raml.raml10.validate(api)
+        return response;
+      }
+      
+      return {
+        webApiBaseUnit: webApiBaseUnit,
+        validationReport: validate(webApiBaseUnit)
+      }
+    })
+    .then((result) => {
+      console.log(result)
       // Get parser issues
       var issues = _.flatten(
-        resultPromise.results.map((issue) => {
-          return {
-            src: issue.location + ': ' + issue.position,
-            message: issue.message,
-            kind: issue.level
-          }
-        })
+        result.validationReport.results.map((issue) => 
+          createIssue(issue.location + ':' + issue.position.start.line + ',' + issue.position.start.column,
+            issue.message,
+            issue.level))
       )
-
-      var issueCountByKind = _.countBy(issues, function(issue) {
-        return issue.kind;
-      })
       
       // If the RAML file is valid, check for style and quality issues
       if (_.isEmpty(issues)) {
 
         // Validate that the API has a title
-        if ((_.isEmpty(ramlContent.title()))) {
-          issues.push({
-            src: filePath,
-            message: 'API should spesify a title property',
-            kind: 'Warning'
-          })
+        if ((_.isEmpty(resultPromise.title()))) {
+          issues.push(createIssue(filePath, 'API should spesify a title property', 'Warning'))
         }
 
         // Validate that all resources have a description
         function validateResourceDescription(resource, location) {
           if (_.isEmpty(resource.description())) {
-            issues.push({
-              src: filePath,
-              message: 'Resource should have a description ' + location,
-              kind: 'Warning'
-            })
+            issues.push(createIssue(filePath,'Resource should have a description ' + location,'Warning'))
           }
           _.each(resource.resources(), function(childResource) {
             validateResourceDescription(childResource, location + childResource.relativeUri().value())
           })
         }
 
-        _.each(ramlContent.resources(), function(resource) {
+        _.each(resultPromise.resources(), function(resource) {
           validateResourceDescription(resource, resource.relativeUri().value())
         })
       }
@@ -103,7 +108,6 @@ _.forEach(commander.args, (filePath) => {
       console.log('  ' + colors.white('[' + result.src + ']') + ' ' + colors.green(result.message))
     })
     .catch((error) => {
-
       console.log(error)
       error.forEach((issue) => {
         switch (issue.kind) {
@@ -120,8 +124,8 @@ _.forEach(commander.args, (filePath) => {
         return issue.kind;
       })
 
-      if ((issueCountByKind[kindEnum.warning] != undefined & issueCountByKind[kindEnum.warning] > 0 & validationOptions.throwOnWarnings) ||
-         (issueCountByKind[kindEnum.Violation] != undefined & issueCountByKind[kindEnum.error] > 0 & validationOptions.throwOnErrors)) {
+      if ((issueCountByKind['Warning'] != undefined & issueCountByKind['Warning'] > 0 & validationOptions.throwOnWarnings) ||
+         (issueCountByKind['Violation'] != undefined & issueCountByKind['Violation'] > 0 & validationOptions.throwOnErrors)) {
           console.log('Exiting with code 1')
           process.exit(1)
       } else {
