@@ -24,16 +24,9 @@
   "dependencies": {
     "colors": "^1.3.3",
     "commander": "^2.20.0",
-<<<<<<< HEAD
-    "lodash": "^4.17.15",
-    "npm": "^6.11.3",
-    "raml-1-parser": "^1.1.52"
-=======
     "lodash": "^4.17.13",
     "npm": "^6.11.3",
-    "raml-1-parser": "^1.1.52",
     "webapi-parser": "^0.2.0"
->>>>>>> 31c84f3551a8f9f617e6e2ccd6f58092a2ae7697
   },
   "devDependencies": {
     "eslint": "^4.18.2"
