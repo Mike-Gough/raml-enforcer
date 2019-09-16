@@ -109,7 +109,6 @@ _.forEach(commander.args, (filePath) => {
       console.log('  ' + colors.white('[' + result.src + ']') + ' ' + colors.green(result.message))
     })
     .catch((error) => {
-      console.log(error)
       error.forEach((issue) => {
         const source = issue.src.replace('file://', '')
         switch (issue.kind) {
