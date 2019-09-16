@@ -52,8 +52,9 @@ _.forEach(commander.args, (filePath) => {
       throw [createIssue(error.Pp,error.mz,'Violation')]
     })
     .then((webApiBaseUnit) => {
-      async function validate(api) {
-        let response = await raml.raml10.validate(api)
+
+      const validate = async () => {
+        const response = await raml.raml10.validate(api);
         return response;
       }
       
