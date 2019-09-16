@@ -1,6 +1,6 @@
 #%RAML 1.0
   title: good
-  description: no warnings
+  description: 204 with body
 
   /resources:
     description: collection of resources
@@ -9,3 +9,9 @@
     /{resourceId}:
       description: single resource
       get:
+        responses:
+          204:
+            body:
+              application/json:
+                {}
+            
