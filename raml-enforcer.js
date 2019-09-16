@@ -60,7 +60,7 @@ _.forEach(commander.args, (filePath) => {
     .then((validationReport) => {
       const api = baseUnit.encodes
 
-      // Get parser issues
+      // If the service contract could not be parsed, format the parser errors into a common model
       var issues = _.flatten(
         validationReport.results.map((issue) => 
           createIssue(issue.location + ':' + issue.position.start.line + ',' + issue.position.start.column,
@@ -68,7 +68,7 @@ _.forEach(commander.args, (filePath) => {
             issue.level))
       )
       
-      // If the RAML file is valid, check for style and quality issues
+      // If the service contract is valid, check for style and quality issues
       if (_.isEmpty(issues)) {
 
         // Validate that the API has a title
@@ -86,6 +86,16 @@ _.forEach(commander.args, (filePath) => {
           if (_.isEmpty(resource.description.value())) {
             issues.push(createIssue(filePath,'Resource should have a description ' + location,'Warning'))
           }
+          _.forEach(resource.operations, (operation) => {
+            _.forEach(operation.responses, (response) => {
+              _.forEach(response.payloads, (payload) => {
+                if (response.statusCode.value() == 204) {
+                  console.log(payload.schema.toJsonSchema)
+                  issues.push(createIssue(filePath,'Resource should have a description ' + location,'Warning'))
+                }
+              })
+            })
+          })
           _.each(resource.endPoints, function(childResource) {
             validateResourceDescription(childResource, location + childResource.path.value())
           })
