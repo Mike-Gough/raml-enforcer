@@ -46,28 +46,23 @@ var createIssue = function(_source, _message, _kind) {
   }
 }
 
+var baseUnit = null
+
 _.forEach(commander.args, (filePath) => {
   raml.raml10.parse(`file://${filePath}`)
     .catch((error) => {
       throw [createIssue(error.Pp,error.mz,'Violation')]
     })
     .then((webApiBaseUnit) => {
-
-      const validate = async () => {
-        const response = await raml.raml10.validate(api);
-        return response;
-      }
-      
-      return {
-        webApiBaseUnit: webApiBaseUnit,
-        validationReport: validate(webApiBaseUnit)
-      }
+      baseUnit = webApiBaseUnit
+      return raml.raml10.validate(baseUnit)
     })
-    .then((result) => {
-      console.log(result)
+    .then((validationReport) => {
+      const api = baseUnit.encodes
+
       // Get parser issues
       var issues = _.flatten(
-        result.validationReport.results.map((issue) => 
+        validationReport.results.map((issue) => 
           createIssue(issue.location + ':' + issue.position.start.line + ',' + issue.position.start.column,
             issue.message,
             issue.level))
@@ -77,22 +72,27 @@ _.forEach(commander.args, (filePath) => {
       if (_.isEmpty(issues)) {
 
         // Validate that the API has a title
-        if ((_.isEmpty(resultPromise.title()))) {
+        if ((_.isEmpty(api.name.value()))) {
           issues.push(createIssue(filePath, 'API should spesify a title property', 'Warning'))
+        }
+
+        // Validate that the API has a description
+        if ((_.isEmpty(api.description.value()))) {
+          issues.push(createIssue(filePath, 'API should spesify a description property', 'Warning'))
         }
 
         // Validate that all resources have a description
         function validateResourceDescription(resource, location) {
-          if (_.isEmpty(resource.description())) {
+          if (_.isEmpty(resource.description.value())) {
             issues.push(createIssue(filePath,'Resource should have a description ' + location,'Warning'))
           }
-          _.each(resource.resources(), function(childResource) {
-            validateResourceDescription(childResource, location + childResource.relativeUri().value())
+          _.each(resource.endPoints, function(childResource) {
+            validateResourceDescription(childResource, location + childResource.path.value())
           })
         }
 
-        _.each(resultPromise.resources(), function(resource) {
-          validateResourceDescription(resource, resource.relativeUri().value())
+        _.each(api.endPoints, function(resource) {
+          validateResourceDescription(resource, resource.path.value())
         })
       }
 
@@ -111,12 +111,13 @@ _.forEach(commander.args, (filePath) => {
     .catch((error) => {
       console.log(error)
       error.forEach((issue) => {
+        const source = issue.src.replace('file://', '')
         switch (issue.kind) {
           case "Warning":
-            console.log('  ' + colors.white('[' + issue.src + ']') + ' ' + colors.yellow('WARN') + ' ' + colors.yellow(issue.message))
+            console.log('  ' + colors.white('[' + source + ']') + ' ' + colors.yellow('WARN') + ' ' + colors.yellow(issue.message))
             break;
           case "Violation":
-            console.log('  ' + colors.white('[' + issue.src + ']') + ' ' + colors.red('ERROR') + ' ' + colors.red(issue.message))
+            console.log('  ' + colors.white('[' + source + ']') + ' ' + colors.red('ERROR') + ' ' + colors.red(issue.message))
             break;
         }
       })
