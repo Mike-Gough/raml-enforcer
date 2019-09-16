@@ -1,0 +1,17 @@
+# Prettier code formatter settings
+# Full schema at: http://json.schemastore.org/prettierrc
+
+arrowParens: "avoid"
+bracketSpacing: true
+endOfLine: "auto"
+htmlWhitespaceSensitivity: "css"
+jsxBracketSameLine: true
+jsxSingleQuote: false
+printWidth: 120
+proseWrap: "preserve"
+quoteProps: "as-needed"
+semi: false
+singleQuote: false
+tabWidth: 2
+trailingComma: "none"
+useTabs: false
