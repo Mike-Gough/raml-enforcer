@@ -122,11 +122,12 @@ _.forEach(commander.args, filePath => {
               } else if (!_.isEmpty(response.payloads)) {
                 _.forEach(response.payloads, payload => {
                   writeSchemaToFile(payload, filePath)
+                  if (response.statusCode.value() != 204 && _.isEmpty(payload.examples)) {
+                    issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location + " " + response.statusCode.value(), "Violation"))
+                  }
                 })
               } else if (response.statusCode.value() != 204) {
                 issues.push(createIssue(filePath, "Endpoints that do not return a 204 HTTP Status Code should have a payload " + location + " " + response.statusCode.value(), "Warning"))
-              } if (response.statusCode.value() != 204 && _.isEmpty(response.examples)) {
-                issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location + " " + response.statusCode.value(), "Violation"))
               }
             })
 
