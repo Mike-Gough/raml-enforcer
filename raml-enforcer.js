@@ -3,7 +3,7 @@
 
 var validationOptions = require("./validation-options.json") // linter configuration
 var pkg = require("./package.json") // NPM package configuration
-var raml = require("webapi-parser").WebApiParser // RAML parser
+var webApiParser = require("webapi-parser").WebApiParser // RAML parser
 var commander = require("commander") // Command line argument parser
 var colors = require("colors") // Colors and styles for console
 var _ = require("lodash") // lodash library
@@ -45,18 +45,16 @@ var createIssue = function(_source, _message, _kind) {
 var baseUnit = null
 
 function writeSchemaToFile(payload, filePath) {
-  console.log("ID: " + payload.id)
+
   const id = decodeURIComponent(payload.id)
   const filename = id.substring(id.indexOf("end-points//") + "end-points//".length)
   const outputPath = path.dirname(filePath) + "/schemas/"
+  const completePath = outputPath + filename.replace(/\//g, "_") + ".schema"
+
   if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath)
   }
-  const completePath = outputPath + filename.replace(/\//g, "_") + ".schema"
-  console.log("Filename: " + completePath)
-  console.log("Name: " + payload.name)
-  console.log("Description: " + payload.description)
-  console.log("mediaType: " + payload.mediaType)
+
   fs.writeFileSync(completePath, payload.schema.toJsonSchema, function(err) {
     if (err) throw err
     console.log("Saved!")
@@ -64,14 +62,14 @@ function writeSchemaToFile(payload, filePath) {
 }
 
 _.forEach(commander.args, filePath => {
-  raml.raml10
+  webApiParser.raml10
     .parse(`file://${filePath}`)
     .catch(error => {
       throw [createIssue(error.Pp, error.mz, "Violation")]
     })
     .then(webApiBaseUnit => {
       baseUnit = webApiBaseUnit
-      return raml.raml10.validate(baseUnit)
+      return webApiParser.raml10.validate(baseUnit)
     })
     .then(validationReport => {
       const api = baseUnit.encodes
@@ -91,7 +89,7 @@ _.forEach(commander.args, filePath => {
       if (_.isEmpty(issues)) {
         // Validate that the API has a title
         if (_.isEmpty(api.name.value())) {
-          issues.push(createIssue(filePath, "API should specify a title property", "Warning"))
+          issues.push(createIssue(filePath, "API should specify a title property", "Error"))
         }
 
         // Validate that the API has a description
@@ -102,20 +100,23 @@ _.forEach(commander.args, filePath => {
         // Validate that all resources have a description
         function validateEndpoints(endpoint, location) {
           if (_.isEmpty(endpoint.description.value())) {
-            issues.push(createIssue(filePath, "Resource should have a description " + location, "Warning"))
+            issues.push(createIssue(filePath, "Endpoint should have a description " + location, "warning"))
           }
           _.forEach(endpoint.operations, operation => {
             _.forEach(operation.responses, response => {
               _.forEach(response.payloads, payload => {
                 writeSchemaToFile(payload, filePath)
-                if (response.statusCode.value() == 204) {
-                  issues.push(createIssue(filePath, "Resource should have a description " + location, "Warning"))
+                if (response.statusCode.value() == 204 && !_.isEmpty(response.payloads)) {
+                  issues.push(createIssue(filePath, "Endpoints that return no-content should not have a payload " + location, "Violation"))
                 }
               })
             })
-            _.forEach(operation.request.payloads, payload => {
-              writeSchemaToFile(payload, filePath)
-            })
+
+            if (!_.isEmpty(operation.request) && !_.isEmpty(operation.request.payloads)) {
+              _.forEach(operation.request.payloads, payload => {
+                writeSchemaToFile(payload, filePath)
+              })
+            }
           })
           _.each(endpoint.endPoints, function(childEndpoint) {
             validateEndpoints(childEndpoint, location + childEndpoint.path.value())
