@@ -13,12 +13,7 @@ commander
   .version(pkg.version)
   .usage("[options] <file ...>")
   .option("  --no-color", "do not use color in output")
-  .option("  --no-includes", "do not report issues for include files")
-  .option("  --no-warnings", "do not report warnings")
-  .option("  --no-errors", "do not report errors")
   .option("  --throw-on-warnings", "exit with an exception when warnings occur")
-  .option("  --no-throw-on-errors", "do not exit with an exception when errors occur")
-  .option("  --no-warn-old-raml-version", "do not return a warning when an old RAML version is being used")
   .parse(process.argv)
 
 // check if command line args have been provided
@@ -84,11 +79,11 @@ _.forEach(commander.args, filePath => {
         }
 
         // Validate that all resources have a description
-        function validateResourceDescription(resource, location) {
-          if (_.isEmpty(resource.description.value())) {
+        function validateEndpoints(endpoint, location) {
+          if (_.isEmpty(endpoint.description.value())) {
             issues.push(createIssue(filePath, "Resource should have a description " + location, "Warning"))
           }
-          _.forEach(resource.operations, operation => {
+          _.forEach(endpoint.operations, operation => {
             _.forEach(operation.responses, response => {
               _.forEach(response.payloads, payload => {
                 console.log(payload.schema.toJsonSchema)
@@ -98,63 +93,59 @@ _.forEach(commander.args, filePath => {
               })
             })
           })
-          _.each(resource.endPoints, function(childResource) {
-            validateResourceDescription(childResource, location + childResource.path.value())
+          _.each(endpoint.endPoints, function(childEndpoint) {
+            validateEndpoints(childEndpoint, location + childEndpoint.path.value())
           })
         }
 
-        _.each(api.endPoints, function(resource) {
-          validateResourceDescription(resource, resource.path.value())
+        _.each(api.endPoints, function(endpoint) {
+          validateEndpoints(endpoint, endpoint.path.value())
         })
-      }
-
-      if (!_.isEmpty(issues)) {
-        throw issues
       }
 
       return {
         src: filePath,
         message: "Valid",
+        issues: issues
       }
     })
     .then(result => {
-      console.log("  " + colors.white("[" + result.src + "]") + " " + colors.green(result.message))
-    })
-    .catch(error => {
-      console.log(error)
-      error.forEach(issue => {
-        const source = issue.src.replace("file://", "")
-        switch (issue.kind) {
-        case "Warning":
-          console.log(
-              "  " + colors.white("[" + source + "]") + " " + colors.yellow("WARN") + " " + colors.yellow(issue.message)
-            )
-          break
-        case "Violation":
-          console.log(
-              "  " + colors.white("[" + source + "]") + " " + colors.red("ERROR") + " " + colors.red(issue.message)
-            )
-          break
+      if (!_.isEmpty(result.issues)) {
+        result.issues.forEach(issue => {
+          const source = issue.src.replace("file://", "")
+          switch (issue.kind) {
+          case "Warning":
+            console.log(
+                "  " + colors.white("[" + source + "]") + " " + colors.yellow("WARN") + " " + colors.yellow(issue.message)
+              )
+            break
+          case "Violation":
+            console.log(
+                "  " + colors.white("[" + source + "]") + " " + colors.red("ERROR") + " " + colors.red(issue.message)
+              )
+            break
+          }
+        })
+  
+        var issueCountByKind = _.countBy(result.issues, function(issue) {
+          return issue.kind
+        })
+  
+        if (
+          (issueCountByKind["Warning"] != undefined) &
+            (issueCountByKind["Warning"] > 0) &
+            validationOptions.throwOnWarnings ||
+          (issueCountByKind["Violation"] != undefined) &
+            (issueCountByKind["Violation"] > 0)
+        ) {
+          console.log("Exiting with code 1")
+          process.exit(1)
+        } else {
+          console.log("Exiting with code 0")
+          process.exit(0)
         }
-      })
-
-      var issueCountByKind = _.countBy(error, function(issue) {
-        return issue.kind
-      })
-
-      if (
-        (issueCountByKind["Warning"] != undefined) &
-          (issueCountByKind["Warning"] > 0) &
-          validationOptions.throwOnWarnings ||
-        (issueCountByKind["Violation"] != undefined) &
-          (issueCountByKind["Violation"] > 0) &
-          validationOptions.throwOnErrors
-      ) {
-        console.log("Exiting with code 1")
-        process.exit(1)
       } else {
-        console.log("Exiting with code 0")
-        process.exit(0)
+        console.log("  " + colors.white("[" + result.src + "]") + " " + colors.green(result.message))
       }
     })
 })
