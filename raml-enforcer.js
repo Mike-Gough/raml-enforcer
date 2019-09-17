@@ -124,7 +124,7 @@ _.forEach(commander.args, filePath => {
                   writeSchemaToFile(payload, filePath)
                 })
               } else if (response.statusCode.value() == 204) {
-                issues.push(createIssue(filePath, "Endpoints that do not return a 204 HTTP Status Code should have a payload " + location, "Warning"))
+                issues.push(createIssue(filePath, "Endpoints that do not return a 204 HTTP Status Code should have a payload " + location + " " + response.statusCode, "Warning"))
               } else {
                 issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location, "Violation"))
               }
