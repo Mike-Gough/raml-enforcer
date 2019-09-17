@@ -87,29 +87,47 @@ _.forEach(commander.args, filePath => {
 
       // If the service contract is valid, check for style and quality issues
       if (_.isEmpty(issues)) {
+
         // Validate that the API has a title
         if (_.isEmpty(api.name.value())) {
-          issues.push(createIssue(filePath, "API should specify a title property", "Error"))
+          issues.push(createIssue(filePath, "API should have a title", "Error"))
         }
 
         // Validate that the API has a description
         if (_.isEmpty(api.description.value())) {
-          issues.push(createIssue(filePath, "API should specify a description property", "Warning"))
+          issues.push(createIssue(filePath, "The API should have a description", "Warning"))
         }
 
         // Validate that all resources have a description
         function validateEndpoints(endpoint, location) {
-          if (_.isEmpty(endpoint.description.value())) {
-            issues.push(createIssue(filePath, "Endpoint should have a description " + location, "warning"))
+          if (location !== _.toLower(location)) {
+            issues.push(createIssue(filePath, "Endpoints should be in lower case " + location, "Warning"))
           }
+
+          if (_.isEmpty(endpoint.description.value())) {
+            issues.push(createIssue(filePath, "Endpoints must have a description " + location, "Violation"))
+          }
+
           _.forEach(endpoint.operations, operation => {
+            if (_.isEmpty(operation.description.value())) {
+              issues.push(createIssue(filePath, "Operations for endpoints should have a description " + location, "Warning"))
+            }
+
             _.forEach(operation.responses, response => {
-              _.forEach(response.payloads, payload => {
-                writeSchemaToFile(payload, filePath)
-                if (response.statusCode.value() == 204 && !_.isEmpty(response.payloads)) {
-                  issues.push(createIssue(filePath, "Endpoints that return no-content should not have a payload " + location, "Violation"))
-                }
-              })
+              
+              if (_.isEmpty(response.payloads) && response.statusCode.value() != 204) {
+                issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location, "Violation"))
+              } else if (!_.isEmpty(response.payloads) && response.statusCode.value() == 204) {
+                issues.push(createIssue(filePath, "Endpoints that return a 204 HTTP Status Code must not have a payload " + location, "Violation"))
+              } else if (!_.isEmpty(response.payloads)) {
+                _.forEach(response.payloads, payload => {
+                  writeSchemaToFile(payload, filePath)
+                })
+              } else if (response.statusCode.value() == 204) {
+                issues.push(createIssue(filePath, "Endpoints that do not return a 204 HTTP Status Code should have a payload " + location, "Warning"))
+              } else {
+                issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location, "Violation"))
+              }
             })
 
             if (!_.isEmpty(operation.request) && !_.isEmpty(operation.request.payloads)) {
@@ -118,6 +136,7 @@ _.forEach(commander.args, filePath => {
               })
             }
           })
+
           _.each(endpoint.endPoints, function(childEndpoint) {
             validateEndpoints(childEndpoint, location + childEndpoint.path.value())
           })
