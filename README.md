@@ -2,9 +2,7 @@
 The Linting utility for RESTful API Modelling Language (RAML).
 
 ## Welcome
-RAML Enforcer is a command line tool for identifying and reporting on patterns found within RAML code. It supports:
-* RAML 0.8
-* RAML 1.0
+RAML Enforcer is a command line tool for identifying and reporting on patterns found within RAML code. It currently supports RAML 1.0.
 
 ## Running RAML Enforcer
 ### Prerequisites
@@ -35,12 +33,7 @@ RAML Enforcer allows you to pass *Linting options* as arguments to the command l
 | Argument                                   | Description                                                                          |
 |--------------------------------------------|--------------------------------------------------------------------------------------|
 | --no-color                                 | do not use color in output                                                           |
-| --no-includes                              | do not report issues for include files                                               |
-| --no-warnings                              | do not report warnings                                                               |
-| --no-errors                                | do not report errors                                                                 |
-| --no-throw-on-warnings                     | do not exit with an exception when warnings occur                                    |
-| --no-throw-on-errors                       | do not exit with an exception when errors occur                                      |
-| --no-warn-old-raml-version                 | do not return a warning when an old RAML version is being used                       |
+| --throw-on-warnings                        | exit with an exception when warnings occur                                           |
 
 ## Further reading
 * [RAML Enforcer - Official Docker Image](https://cloud.docker.com/u/mikeyryan/repository/docker/mikeyryan/raml-enforcer)
@@ -50,7 +43,7 @@ RAML Enforcer allows you to pass *Linting options* as arguments to the command l
 
 ## Useful links
 * [raml.org](https://raml.org/)
-* [raml-js-parser-2](https://github.com/raml-org/raml-js-parser-2)
+* [webapi-parser](https://raml-org.github.io/webapi-parser/js/index.html)
 * [lodash](https://lodash.com)
 * [commander](https://github.com/tj/commander.js)
 * [color](https://github.com/Qix-/color)
