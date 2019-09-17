@@ -103,7 +103,7 @@ _.forEach(commander.args, filePath => {
           if (location !== _.toLower(location)) {
             issues.push(createIssue(filePath, "Endpoints should be in lower case " + location, "Warning"))
           }
-
+          
           if (_.isEmpty(endpoint.description.value())) {
             issues.push(createIssue(filePath, "Endpoints must have a description " + location, "Violation"))
           }
