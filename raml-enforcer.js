@@ -65,7 +65,7 @@ _.forEach(commander.args, filePath => {
   webApiParser.raml10
     .parse(`file://${filePath}`)
     .catch(error => {
-      throw [createIssue(error.Pp, error.mz, "Violation")]
+      throw [createIssue('Parser', error.mz, "Violation")]
     })
     .then(webApiBaseUnit => {
       baseUnit = webApiBaseUnit
@@ -147,49 +147,51 @@ _.forEach(commander.args, filePath => {
         })
       }
 
+      if (!_.isEmpty(issues)) {
+        throw issues
+      }
+
       return {
         src: filePath,
-        message: "Valid",
-        issues: issues
+        message: "Valid"
       }
     })
-    .then(result => {
-      if (!_.isEmpty(result.issues)) {
-        result.issues.forEach(issue => {
-          const source = issue.src.replace("file://", "")
-          switch (issue.kind) {
-          case "Warning":
-            console.log(
-                "  " + colors.white("[" + source + "]") + " " + colors.yellow("WARN") + " " + colors.yellow(issue.message)
-              )
-            break
-          case "Violation":
-            console.log(
-                "  " + colors.white("[" + source + "]") + " " + colors.red("ERROR") + " " + colors.red(issue.message)
-              )
-            break
-          }
-        })
-  
-        var issueCountByKind = _.countBy(result.issues, function(issue) {
-          return issue.kind
-        })
-  
-        if (
-          (issueCountByKind["Warning"] != undefined) &
-            (issueCountByKind["Warning"] > 0) &
-            validationOptions.throwOnWarnings ||
-          (issueCountByKind["Violation"] != undefined) &
-            (issueCountByKind["Violation"] > 0)
-        ) {
-          console.log("Exiting with code 1")
-          process.exit(1)
-        } else {
-          console.log("Exiting with code 0")
-          process.exit(0)
+    .then((result) => {
+      console.log("  " + colors.white("[" + result.src + "]") + " " + colors.green(result.message))
+    })
+    .catch((issues) => {
+      issues.forEach(issue => {
+        const source = issue.src.replace("file://", "")
+        switch (issue.kind) {
+        case "Warning":
+          console.log(
+              "  " + colors.white("[" + source + "]") + " " + colors.yellow("WARN") + " " + colors.yellow(issue.message)
+            )
+          break
+        case "Violation":
+          console.log(
+              "  " + colors.white("[" + source + "]") + " " + colors.red("ERROR") + " " + colors.red(issue.message)
+            )
+          break
         }
+      })
+
+      var issueCountByKind = _.countBy(issues, function(issue) {
+        return issue.kind
+      })
+
+      if (
+        (issueCountByKind["Warning"] != undefined) &
+          (issueCountByKind["Warning"] > 0) &
+          validationOptions.throwOnWarnings ||
+        (issueCountByKind["Violation"] != undefined) &
+          (issueCountByKind["Violation"] > 0)
+      ) {
+        console.log("Exiting with code 1")
+        process.exit(1)
       } else {
-        console.log("  " + colors.white("[" + result.src + "]") + " " + colors.green(result.message))
+        console.log("Exiting with code 0")
+        process.exit(0)
       }
     })
 })
