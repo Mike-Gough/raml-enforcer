@@ -43,6 +43,7 @@ var createIssue = function(_source, _message, _kind) {
 }
 
 var baseUnit = null
+var codesWithoutAResponseBody = ['204']
 
 function writeSchemaToFile(payload, filePath) {
 
@@ -100,34 +101,40 @@ _.forEach(commander.args, filePath => {
 
         // Validate that all resources have a description
         function validateEndpoints(endpoint, location) {
+          const endpointLocation = filePath + ":" + endpoint.position.start.line + ":" + endpoint.position.start.column;
+
           if (location !== _.toLower(location)) {
-            issues.push(createIssue(filePath, "Endpoints should be in lower case " + location, "Warning"))
+            issues.push(createIssue(endpointLocation, "The endpoint " + location + " should be in lower case", "Warning"))
           }
           
           if (_.isEmpty(endpoint.description.value())) {
-            issues.push(createIssue(filePath, "Endpoints must have a description " + location, "Violation"))
+            issues.push(createIssue(endpointLocation, "The endpoint " + location + " must have a description", "Violation"))
           }
 
           _.forEach(endpoint.operations, operation => {
+            const operationLocation = filePath + ":" + operation.position.start.line + ":" + operation.position.start.column;
+
             if (_.isEmpty(operation.description.value())) {
-              issues.push(createIssue(filePath, "Operations for endpoints should have a description " + location, "Warning"))
+              issues.push(createIssue(operationLocation, "The " + operation.method + " operation for the endpoint "+ location + " should have a description", "Warning"))
             }
 
             _.forEach(operation.responses, response => {
-              
-              if (_.isEmpty(response.payloads) && response.statusCode.value() != 204) {
-                issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location, "Violation"))
-              } else if (!_.isEmpty(response.payloads) && response.statusCode.value() == 204) {
-                issues.push(createIssue(filePath, "Endpoints that return a 204 HTTP Status Code must not have a payload " + location, "Violation"))
+              const responseLocation = filePath + ":" + response.position.start.line + ":" + response.position.start.column;
+
+              if (_.isEmpty(response.payloads) && !_.includes(codesWithoutAResponseBody, response.statusCode.value())) {
+
+                issues.push(createIssue(responseLocation, "The endpoint " + response.statusCode.value() + " " + location + " must have a response payload defined", "Violation"))
+              } else if (!_.isEmpty(response.payloads) && _.includes(codesWithoutAResponseBody, response.statusCode.value())) {
+
+                issues.push(createIssue(responseLocation, "The endpoint " + response.statusCode.value() + " " + location + " must not return a payload" + location, "Violation"))
               } else if (!_.isEmpty(response.payloads)) {
+
                 _.forEach(response.payloads, payload => {
                   writeSchemaToFile(payload, filePath)
-                  if (response.statusCode.value() != 204 && _.isEmpty(payload.examples)) {
-                    issues.push(createIssue(filePath, "Endpoints with responses must include examples " + location + " " + response.statusCode.value(), "Violation"))
-                  }
                 })
-              } else if (response.statusCode.value() != 204) {
-                issues.push(createIssue(filePath, "Endpoints that do not return a 204 HTTP Status Code should have a payload " + location + " " + response.statusCode.value(), "Warning"))
+              } else if (!_.includes(codesWithoutAResponseBody, response.statusCode.value())) {
+
+                issues.push(createIssue(responseLocation, "The endpoint " + response.statusCode.value() + " " + location + " should return a payload" + location, "Warning"))
               }
             })
 
