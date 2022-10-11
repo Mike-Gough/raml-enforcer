@@ -26,7 +26,7 @@
     "commander": "^2.20.0",
     "lodash": "^4.17.13",
     "npm": "^6.13.4",
-    "raml-1-parser": "^1.1.52"
+    "raml-1-parser": "^1.1.67"
   },
   "devDependencies": {
     "eslint": "^4.18.2"
